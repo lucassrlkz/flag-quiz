@@ -1,17 +1,17 @@
 <main></main>
 <div class="quiz-app" [class.dark-theme]="darkMode()">
   <aside class="progress-rail" aria-label="Quiz progress">
-    <div class="rail-heading"><span>QUIZ</span><strong>10 Qs</strong></div>
+    <div class="rail-heading"><span>QUIZ</span><strong>10</strong></div>
     <div class="rail-line"></div>
     <div class="progress-list">
       @for (step of steps; track step) {
         <div
           class="progress-step"
-          [class.complete]="step < questionNumber()"
-          [class.current]="step === questionNumber()"
-          [class.future]="step > questionNumber()"
+          [class.complete]="isFinished() || step < questionNumber()"
+          [class.current]="!isFinished() && step === questionNumber()"
+          [class.future]="!isFinished() && step > questionNumber()"
         >
-          @if (step < questionNumber()) {
+          @if (isFinished() || step < questionNumber()) {
             <span aria-label="Completed">✓</span>
           } @else {
             <span>{{ step }}</span>
@@ -26,8 +26,7 @@
       <div class="brand"><span class="brand-mark">⚑</span><span>Flag Quiz</span></div>
       <div class="topbar-actions">
         <div class="question-progress">
-          <!-- <span class="progress-ring"><span></span></span -->
-          <b>Question {{ questionNumber() }} of 10</b>
+          <b>{{ isFinished() ? 'Quiz concluído' : 'Question ' + questionNumber() + ' of 10' }}</b>
         </div>
         <div class="score-pill">
           Score: <strong>{{ score() }} / 10</strong>
@@ -55,54 +54,76 @@
 
     <section class="game-stage">
       <div class="quiz-card">
-        <div class="quiz-intro">
-          <span class="eyebrow">DESAFIO DA BANDEIRA</span>
-          <h1>{{ country().name }}</h1>
-          <p>Qual bandeira pertence a este país?</p> 
-          <!-- Which flag belongs to this country? -->
-        </div>
+        @if (isFinished()) {
+          <div class="result-content" aria-live="polite">
+            <span class="result-icon" aria-hidden="true">🏆</span>
+            <span class="eyebrow">DESAFIO DA BANDEIRA</span>
+            <h1>Quiz finalizado!</h1>
+            <p>Você acertou</p>
+            <strong class="result-score">{{ score() }} <span>/ 10</span></strong>
+            <p class="result-message">
+              @if (score() === 10) {
+                Perfeito! Você conhece muito bem as bandeiras.
+              } @else if (score() >= 7) {
+                Muito bem! Você mandou muito bem no quiz.
+              } @else if (score() >= 4) {
+                Bom trabalho! Que tal tentar mais uma vez?
+              } @else {
+                Continue praticando e tente novamente!
+              }
+            </p>
+            <button type="button" class="next-button restart-button" (click)="restartQuiz()">
+              REINICIAR QUIZ <span>↻</span>
+            </button>
+          </div>
+        } @else {
+          <div class="quiz-intro">
+            <span class="eyebrow">DESAFIO DA BANDEIRA</span>
+            <h1>{{ country().name }}</h1>
+            <p>Qual bandeira pertence a este país?</p>
+          </div>
 
-        <div class="answer-grid" aria-label="Flag choices">
-          @for (option of options(); track option.name) {
+          <div class="answer-grid" aria-label="Flag choices">
+            @for (option of options(); track option.name) {
+              <button
+                type="button"
+                class="answer-card"
+                [class.selected]="option.selected"
+                [class.correct]="option.selected && option.correct"
+                [class.incorrect]="option.selected && !option.correct"
+                [disabled]="hasAnswered()"
+                (click)="choose(option)"
+              >
+                <span
+                  class="flag-art"
+                  [class]="'flag-art ' + flagClass(option)"
+                  role="img"
+                  [attr.aria-label]="option.name + ' flag'"
+                  >{{ option.flag }}</span
+                >
+                <span class="answer-meta"
+                  ><span class="answer-status">{{
+                    option.selected ? (option.correct ? 'Selected' : 'Try again') : 'Option'
+                  }}</span></span
+                >
+              </button>
+            }
+          </div>
+
+          <div class="quiz-footer">
+            <button type="button" class="skip-button" (click)="nextQuestion()">
+              Skip This Question
+            </button>
             <button
               type="button"
-              class="answer-card"
-              [class.selected]="option.selected"
-              [class.correct]="option.selected && option.correct"
-              [class.incorrect]="option.selected && !option.correct"
-              [disabled]="hasAnswered()"
-              (click)="choose(option)"
+              class="next-button"
+              [disabled]="!hasAnswered()"
+              (click)="nextQuestion()"
             >
-              <span
-                class="flag-art"
-                [class]="'flag-art ' + flagClass(option)"
-                role="img"
-                [attr.aria-label]="option.name + ' flag'"
-                >{{ option.flag }}</span
-              >
-              <span class="answer-meta"
-                ><strong>{{ option.name }}</strong
-                ><span class="answer-status">{{
-                  option.selected ? (option.correct ? 'Selected' : 'Try again') : 'Option'
-                }}</span></span
-              >
+              {{ questionNumber() === 10 ? 'FINALIZAR QUIZ' : 'PRÓXIMO' }} <span>→</span>
             </button>
-          }
-        </div>
-
-        <div class="quiz-footer">
-          <button type="button" class="skip-button" (click)="nextQuestion()">
-            Skip This Question
-          </button>
-          <button
-            type="button"
-            class="next-button"
-            [disabled]="!hasAnswered()"
-            (click)="nextQuestion()"
-          >
-            {{ questionNumber() === 10 ? 'FINALIZAR QUIZ' : 'PRÓXIMO' }} <span>→</span>
-          </button>
-        </div>
+          </div>
+        }
       </div>
     </section>
   </main>

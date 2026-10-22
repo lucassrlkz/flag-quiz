@@ -39,12 +39,13 @@ export class App {
   readonly steps = Array.from({ length: 10 }, (_, index) => index + 1);
   readonly darkMode = signal(false);
   readonly questionNumber = signal(1);
+  readonly isFinished = signal(false);
 
   readonly score = signal(0);
   readonly random_country = fallbackCountries[Math.floor(Math.random() * fallbackCountries.length)];
 
   readonly country = signal<Country>(this.random_country);
-  readonly options = signal<AnswerOption[]>(this.buildOptions(this.country(), this.country().name));
+  readonly options = signal<AnswerOption[]>(this.buildOptions(this.country()));
   
   readonly hasAnswered = computed(() => this.options().some((option) => option.selected));
   private loading = false;
@@ -62,11 +63,20 @@ export class App {
 
   nextQuestion(): void {
     if (this.questionNumber() >= 10) {
-      this.questionNumber.set(1);
-      this.score.set(0);
+      this.isFinished.set(true);
     } else {
       this.questionNumber.update((value) => value + 1);// Keep the score for the next question
+      void this.loadCountry();
     }
+  }
+
+  restartQuiz(): void {
+    this.questionNumber.set(1);
+    this.score.set(0);
+    this.isFinished.set(false);
+    const nextCountry = fallbackCountries[Math.floor(Math.random() * fallbackCountries.length)];
+    this.country.set(nextCountry);
+    this.options.set(this.buildOptions(nextCountry));
     void this.loadCountry();
   }
 
@@ -96,6 +106,17 @@ export class App {
 
   private buildOptions(answer: Country, selectedName?: string): AnswerOption[] {
     const distractors = fallbackCountries.filter((country) => country.name !== answer.name).sort(() => Math.random() - 0.5).slice(0, 3);
-    return [answer, ...distractors].map((country) => ({ ...country, selected: country.name === selectedName, correct: country.name === answer.name }));
-}
+    const options = [answer, ...distractors].map((country) => ({
+      ...country,
+      selected: country.name === selectedName,
+      correct: country.name === answer.name,
+    }));
+
+    for (let index = options.length - 1; index > 0; index--) {
+      const randomIndex = Math.floor(Math.random() * (index + 1));
+      [options[index], options[randomIndex]] = [options[randomIndex], options[index]];
+    }
+
+    return options;
+  }
 }
