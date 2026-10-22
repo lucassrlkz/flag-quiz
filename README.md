@@ -4,7 +4,7 @@ Quiz interativo de bandeiras de países, desenvolvido com **Angular** e estiliza
 
 > Teste seus conhecimentos de geografia e veja quantas bandeiras você consegue identificar.
 
-[![Netlify Status](https://api.netlify.com/api/v1/badges/0be36565-ce90-4912-a315-7b4cb2ce4450/deploy-status)](https://app.netlify.com/projects/flagquiz-live/deploys)
+[Ver demo](https://flag-quiz-psi-two.vercel.app/)
 
 <!-- Se tiver deploy, adicione aqui: [Ver demo](https://seu-link) -->
 
